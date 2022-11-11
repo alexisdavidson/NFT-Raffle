@@ -83,18 +83,13 @@ function App() {
   return (
     <BrowserRouter>
       <div className="App">
-        <Navigation web3Handler={web3Handler} tokenBalance={tokenBalance} account={account} getPlayerBalance={getPlayerBalance} />
-        { loading.length > 0 ? (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh'}}>
-            <Spinner animation="border" style={{ display: 'flex' }} />
-            <p className='mx-3 my-0'>{loading}</p>
-          </div>
-        ) : (
+        {/* <Navigation web3Handler={web3Handler} tokenBalance={tokenBalance} account={account} getPlayerBalance={getPlayerBalance} /> */}
+
           <Routes>
             <Route path="/" element={
               <Home />
             } />
-            <Route path="/swap" element={
+            {/* <Route path="/swap" element={
               <Swap 
                 ethBalance={ethBalance}
                 tokenBalance={tokenBalance}
@@ -108,9 +103,8 @@ function App() {
             } />
             <Route path="/coinflip" element={
               <CoinFlip coinflip={coinflip}/>
-            } />
+            } /> */}
           </Routes>
-        ) }
       </div>
     </BrowserRouter>
   );
