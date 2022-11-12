@@ -24,11 +24,23 @@ function App() {
   const [account, setAccount] = useState(null)
 
   let provider;
+  let interval;
+  let currentTimestampVariable = 0
 
   useEffect(async () => {
     provider = new ethers.providers.Web3Provider(window.ethereum)
     await updateCurrentTimestampFromBlockchain()
     loadItems()
+
+    if (interval == null) {
+      interval = setInterval(() => {
+        currentTimestampVariable += 1000
+        setCurrentTimestamp(currentTimestampVariable)
+        // console.log("currentTimestamp: " + currentTimestampVariable)
+      }, 1000);
+    }
+
+    return () => clearInterval(interval); // unmount function prevents memory leaks
   }, [])
 
   const loadItems = () => {
@@ -76,10 +88,10 @@ function App() {
   const updateCurrentTimestampFromBlockchain = async () => {
     console.log("getCurrentTimestamp")
     const currentBlock = await provider.getBlockNumber();
-    const currentTimestampTemp = (await provider.getBlock(currentBlock)).timestamp;
+    currentTimestampVariable = (await provider.getBlock(currentBlock)).timestamp;
 
-    console.log(currentTimestampTemp)
-    setCurrentTimestamp(currentTimestampTemp)
+    console.log(currentTimestampVariable)
+    setCurrentTimestamp(currentTimestampVariable)
   }
 
   // MetaMask Login/Connect
@@ -87,6 +99,8 @@ function App() {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     setAccount(accounts[0])
 
+    if (provider == null)
+      provider = new ethers.providers.Web3Provider(window.ethereum)
     const signer = provider.getSigner()
 
     const _token = new ethers.Contract(TokenAddress.address, TokenAbi.abi, signer)
