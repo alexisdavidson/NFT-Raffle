@@ -6,101 +6,90 @@ import {
 import './App.css';
 import Navigation from './Navbar';
 import Home from './Home';
-import Swap from './Swap';
-import Admin from './Admin';
-import CoinFlip from './games/CoinFlip';
 
 import { useState } from 'react'
 import { ethers } from 'ethers'
-import { Spinner } from 'react-bootstrap'
 import { useEffect } from 'react'
 
 import TokenAbi from '../contractsData/Token.json'
 import TokenAddress from '../contractsData/Token-address.json'
-import HouseAbi from '../contractsData/House.json'
-import HouseAddress from '../contractsData/House-address.json'
-import CoinFlipAbi from '../contractsData/CoinFlip.json'
-import CoinFlipAddress from '../contractsData/CoinFlip-address.json'
 
 const toWei = (num) => ethers.utils.parseEther(num.toString())
 const fromWei = (num) => ethers.utils.formatEther(num)
 
 function App() {
-  const [loading, setLoading] = useState("Awaiting MetaMask Connection...")
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
   const [account, setAccount] = useState(null)
-  const [house, setHouse] = useState({})
-  const [token, setToken] = useState({})
-  const [coinflip, setCoinFlip] = useState({})
-  const [ethBalance, setEthBalance] = useState("0")
-  const [tokenBalance, setTokenBalance] = useState("0")
-  const [houseBalance, setHouseBalance] = useState("0")
 
-  const GET_BALANCE_INTERVAL_MS = 5000;
-  let provider;
-  let interval;
+  useEffect(() => {
+    loadItems()
+  }, [])
 
-    useEffect(() => {
-      return () => clearInterval(interval); // unmount function prevents memory leaks
-    }, [])
+  const loadItems = () => {
+    console.log("loadItems")
+    let itemsTemp = []
+
+    itemsTemp.push({
+      id: 1,
+      name: "MAYC #18341",
+      image: "https://boredlucky.com/_next/image?url=https%3A%2F%2Flh3.googleusercontent.com%2FvVAhsatqKexyoJhCs-S7WriLXEoepP_Fp9OzUCKjiG3MWGew-9HEIqZGzHe4dMHHeNo_1uYno1ipXOR3Svp2Objtc4yZaqmJsAu42A&w=1920&q=80",
+      timestampStart: 123,
+      duration: 12,
+      dollarValue: 31800,
+      totalSupply: 500,
+      price: 0.05,
+      projectName: "Mutant Ape Yacht Club",
+      ticketsBought: ["0x1", "0x1", "0x2"],
+      winner: null,
+      ended: false,
+      nftContractAddress: "0x60E4d786628Fea6478F785A6d7e704777c86a7c6"
+    })
+
+    itemsTemp.push({
+      id: 0,
+      name: "Doodle #8761",
+      image: "https://boredlucky.com/_next/image?url=https%3A%2F%2Flh3.googleusercontent.com%2F4990XWkl9GGLi8vz5jmO2RXX3vhsaIutOAJPQdB65eQ60dKwXQE7i9oiZCmUYnrwSmbGJ6ipRLKG2VXSIQyBfJ1db-BfrrZw8xwZXg&w=1920&q=80",
+      timestampStart: 123,
+      duration: 12,
+      dollarValue: 12720,
+      totalSupply: 110,
+      price: 0.1,
+      projectName: "Doodles",
+      ticketsBought: [],
+      winner: null,
+      ended: false,
+      nftContractAddress: "0x8a90CAb2b38dba80c64b7734e58Ee1dB38B8992e"
+    })
+
+    console.log(itemsTemp)
+
+    setItems(itemsTemp)
+    setLoading(false)
+  }
 
   // MetaMask Login/Connect
   const web3Handler = async () => {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     setAccount(accounts[0])
 
-    provider = new ethers.providers.Web3Provider(window.ethereum)
+    let provider = new ethers.providers.Web3Provider(window.ethereum)
 
     const signer = provider.getSigner()
 
     const _token = new ethers.Contract(TokenAddress.address, TokenAbi.abi, signer)
-    const _house = new ethers.Contract(HouseAddress.address, HouseAbi.abi, signer)
-    const _coinflip = new ethers.Contract(CoinFlipAddress.address, CoinFlipAbi.abi, signer)
-
-    getPlayerBalance(_token, accounts[0])
-    setEthBalance(fromWei(await provider.getBalance(accounts[0])).toString())
-    setHouseBalance(fromWei(await provider.getBalance(_house.address)).toString())
-    setToken(_token)
-    setHouse(_house)
-    setCoinFlip(_coinflip)
-    setLoading("")
-
-    interval = setInterval(() => {
-        getPlayerBalance(_token, accounts[0])
-    }, GET_BALANCE_INTERVAL_MS);
-  }
-
-  const getPlayerBalance = async (_token, _account) => {
-    if (_token != null && _account != null) {
-      const playerBalance = fromWei(await _token.balanceOf(_account)).toString()
-      console.log("getPlayerBalance: " + playerBalance)
-      setTokenBalance(playerBalance)
-      return playerBalance
-    }
-    console.log("getPlayerBalance null: " + _token + ", " + _account)
-    return ""
   }
 
   return (
     <BrowserRouter>
       <div className="App">
-        {/* <Navigation web3Handler={web3Handler} tokenBalance={tokenBalance} account={account} getPlayerBalance={getPlayerBalance} /> */}
+        <Navigation web3Handler={web3Handler} account={account} />
 
           <Routes>
             <Route path="/" element={
-              <Home />
+              <Home loading={loading} items={items} />
             } />
-            {/* <Route path="/swap" element={
-              <Swap 
-                ethBalance={ethBalance}
-                tokenBalance={tokenBalance}
-                house={house}
-                token={token}
-                account={account}
-              />
-            } />
-            <Route path="/admin" element={
-              <Admin houseBalance={houseBalance} house={house} account={account}/>
-            } />
+            {/*
             <Route path="/coinflip" element={
               <CoinFlip coinflip={coinflip}/>
             } /> */}

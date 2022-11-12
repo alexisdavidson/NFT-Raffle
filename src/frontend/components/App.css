@@ -1,6 +1,13 @@
+@font-face {
+  font-family: myFirstFont;
+  src: url("./assets/VT323-Regular.ttf");
+}
+
 .App {
   text-align: center;
   color: white;
+  font-family: myFirstFont;
+  font-size: 1.7rem;
 }
 
 body {
