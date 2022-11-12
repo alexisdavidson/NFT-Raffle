@@ -58,26 +58,25 @@ const Home = ({loading, items, currentTimestamp}) => {
                     items.map((item, idx) => (
                         <Col key={idx} className="overflow-hidden">
                             <Card bg="dark">
+                                <Card.Header>Value: {formatter.format(item.dollarValue)}</Card.Header>
                                 <Card.Img variant="top" src={item.image} />
                                 <Card.Body color="secondary">
-                                <Card.Title>{item.name}</Card.Title>
-                                <Card.Text>
-                                    Value: {formatter.format(item.dollarValue)}
-                                    <br/>
-                                    {getTimeLeftString(currentTimestamp, item.timestampStart, item.duration)}
-                                    <br/>
-                                    {item.totalSupply - item.ticketsBought.length} / {item.totalSupply}
-                                    <br/>
-                                    Price: {item.price} ETH
-                                    <br/>
-                                </Card.Text>
+                                    <Card.Title>{item.name}</Card.Title>
+                                    <Card.Text>
+                                        {getTimeLeftString(currentTimestamp, item.timestampStart, item.duration)}
+                                        <br/>
+                                        <br/>
+                                        Tickets Left: <br/> {item.totalSupply - item.ticketsBought.length} / {item.totalSupply}
+                                        <br/>
+                                        Price: {item.price} ETH
+                                    </Card.Text>
                                 </Card.Body>
                                 <Card.Footer>
-                                <div className='d-grid'>
-                                    <Button variant="success" size="lg" onClick={() => enterRaffle(item.id)}>
-                                        Enter
-                                    </Button>
-                                </div>
+                                    <div className='d-grid'>
+                                        <Button variant="success" size="lg" onClick={() => enterRaffle(item.id)}>
+                                            Enter
+                                        </Button>
+                                    </div>
                                 </Card.Footer>
                             </Card>
                         </Col>
