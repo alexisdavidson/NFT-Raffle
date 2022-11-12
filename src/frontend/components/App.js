@@ -20,9 +20,14 @@ const fromWei = (num) => ethers.utils.formatEther(num)
 function App() {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [currentTimestamp, setCurrentTimestamp] = useState(0)
   const [account, setAccount] = useState(null)
 
-  useEffect(() => {
+  let provider;
+
+  useEffect(async () => {
+    provider = new ethers.providers.Web3Provider(window.ethereum)
+    await updateCurrentTimestampFromBlockchain()
     loadItems()
   }, [])
 
@@ -34,7 +39,7 @@ function App() {
       id: 1,
       name: "MAYC #18341",
       image: "https://boredlucky.com/_next/image?url=https%3A%2F%2Flh3.googleusercontent.com%2FvVAhsatqKexyoJhCs-S7WriLXEoepP_Fp9OzUCKjiG3MWGew-9HEIqZGzHe4dMHHeNo_1uYno1ipXOR3Svp2Objtc4yZaqmJsAu42A&w=1920&q=80",
-      timestampStart: 123,
+      timestampStart: 1668221256,
       duration: 12,
       dollarValue: 31800,
       totalSupply: 500,
@@ -50,7 +55,7 @@ function App() {
       id: 0,
       name: "Doodle #8761",
       image: "https://boredlucky.com/_next/image?url=https%3A%2F%2Flh3.googleusercontent.com%2F4990XWkl9GGLi8vz5jmO2RXX3vhsaIutOAJPQdB65eQ60dKwXQE7i9oiZCmUYnrwSmbGJ6ipRLKG2VXSIQyBfJ1db-BfrrZw8xwZXg&w=1920&q=80",
-      timestampStart: 123,
+      timestampStart: 1668201056,
       duration: 12,
       dollarValue: 12720,
       totalSupply: 110,
@@ -67,13 +72,20 @@ function App() {
     setItems(itemsTemp)
     setLoading(false)
   }
+  
+  const updateCurrentTimestampFromBlockchain = async () => {
+    console.log("getCurrentTimestamp")
+    const currentBlock = await provider.getBlockNumber();
+    const currentTimestampTemp = (await provider.getBlock(currentBlock)).timestamp;
+
+    console.log(currentTimestampTemp)
+    setCurrentTimestamp(currentTimestampTemp)
+  }
 
   // MetaMask Login/Connect
   const web3Handler = async () => {
     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
     setAccount(accounts[0])
-
-    let provider = new ethers.providers.Web3Provider(window.ethereum)
 
     const signer = provider.getSigner()
 
@@ -87,7 +99,7 @@ function App() {
 
           <Routes>
             <Route path="/" element={
-              <Home loading={loading} items={items} />
+              <Home loading={loading} items={items} currentTimestamp={currentTimestamp}/>
             } />
             {/*
             <Route path="/coinflip" element={
