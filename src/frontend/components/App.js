@@ -23,11 +23,16 @@ function App() {
   const [currentTimestamp, setCurrentTimestamp] = useState(0)
   const [account, setAccount] = useState(null)
 
+  let hideWebsiteWithPlaceholder = true
+
   let provider;
   let interval;
   let currentTimestampVariable = 0
 
   useEffect(async () => {
+    if (hideWebsiteWithPlaceholder)
+      return
+    
     provider = new ethers.providers.Web3Provider(window.ethereum)
     await updateCurrentTimestampFromBlockchain()
     loadItems()
@@ -104,6 +109,14 @@ function App() {
     const signer = provider.getSigner()
 
     const _token = new ethers.Contract(TokenAddress.address, TokenAbi.abi, signer)
+  }
+
+  if (hideWebsiteWithPlaceholder) {
+    return (
+      <div className="App">
+        Lucky Kitaro Placeholder
+      </div>
+    )
   }
 
   return (
