@@ -58,9 +58,8 @@ contract Raffle is Ownable, ReentrancyGuard {
         revert("Entry not found");
     }
 
-    function getEntry(uint256 _index) public view returns(Entry memory) {
-        require(_index > entries.length, "Index of entries out of bound.");
-        return entries[_index];
+    function getEntryLength() public view returns(uint256) {
+        return entries.length;
     }
 
     function checkRaffleSoldOut(Entry storage _entry) internal {
