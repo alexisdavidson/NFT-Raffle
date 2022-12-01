@@ -78,6 +78,35 @@ describe("Raffle", async function() {
             
             await raffle.connect(addr3).buyTicket(0, { value: price})
             expect(await raffle.getTicketsBoughtLength(0)).to.equal(3)
+            
+            await expect(raffle.connect(addr1).buyTicket(0, { value: price})).to.be.revertedWith('Raffle sold out!');
+
+            let entry1 = await raffle.entries(0);
+            let winner = entry1.winner
+            console.log("winner: " + winner)
+            
+            // Raffle 2
+            await raffle.connect(deployer).createRaffle(duration, dollarValue, 2, price, name, 
+                image, projectName, nftAddress);
+            expect(await raffle.getEntryLength()).to.equal(2);
+            
+            await raffle.connect(addr1).buyTicket(1, { value: price})
+            expect(await raffle.getTicketsBoughtLength(1)).to.equal(1)
+            
+            await raffle.connect(addr2).buyTicket(1, { value: price})
+            expect(await raffle.getTicketsBoughtLength(1)).to.equal(2)
+            
+            await expect(raffle.connect(addr3).buyTicket(0, { value: price})).to.be.revertedWith('Raffle sold out!');
+
+            let entry2 = await raffle.entries(1);
+            winner = entry2.winner
+            console.log("winner: " + winner)
+
+            await raffle.connect(deployer).checkRaffleSoldOutOwner(1); // Force redraw a winner (in case error in ChainLink)
+
+            entry2 = await raffle.entries(1);
+            winner = entry2.winner
+            console.log("winner: " + winner)
         })
     })
 })

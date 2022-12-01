@@ -18,7 +18,6 @@ contract Raffle is Ownable, ReentrancyGuard, VRFConsumerBaseV2 {
         string projectName;
         address[] ticketsBought;
         address winner;
-        bool ended;
         address nftAddress;
         bool canceled;
     }
@@ -52,13 +51,14 @@ contract Raffle is Ownable, ReentrancyGuard, VRFConsumerBaseV2 {
                             string memory _image, string memory _projectName, address _nftAddress) public onlyOwner {
         uint256 _entryId = entries.length; 
         entries.push(Entry(_entryId, _duration, _dollarValue, _ticketsTotalSupply, _price, _name, _image, _projectName,
-                            new address[](0), address(0), false, _nftAddress, false));
+                            new address[](0), address(0), _nftAddress, false));
         emit RaffleCreated(_entryId);
     }
 
     function buyTicket(uint256 _entryId) public payable nonReentrant {
         Entry storage _entry = getEntryByIndex(_entryId);
         require(msg.value >= _entry.price, "Not enough ETH sent");
+        require(_entry.ticketsBought.length < _entry.ticketsTotalSupply, "Raffle sold out!");
 
         _entry.ticketsBought.push(msg.sender);
 
@@ -86,14 +86,14 @@ contract Raffle is Ownable, ReentrancyGuard, VRFConsumerBaseV2 {
         return _entry.ticketsBought.length;
     }
 
+    function checkRaffleSoldOutOwner(uint256 _entryId) public onlyOwner {
+        Entry storage _entry = getEntryByIndex(_entryId);
+        checkRaffleSoldOut(_entry);
+    }
+
     function checkRaffleSoldOut(Entry storage _entry) private {
         if (_entry.ticketsBought.length >= _entry.ticketsTotalSupply) {
-            // Call Chainlink to get random winner
-
             requestRandomNumberForWinner(_entry.id);
-            // Add raffle to queue
-
-            _entry.ended = true;
             emit RaffleSoldOut(_entry.id);
         }
     }
@@ -113,15 +113,15 @@ contract Raffle is Ownable, ReentrancyGuard, VRFConsumerBaseV2 {
     }
     
     function requestRandomNumberForWinner(uint256 _entryId) private {
-        // s_requestId = COORDINATOR.requestRandomWords(
-        //     keyHash,
-        //     s_subscriptionId,
-        //     requestConfirmations,
-        //     callbackGasLimit,
-        //     numWords
-        // );
-
         rafflesEndedQueue.push(_entryId);
+
+        s_requestId = COORDINATOR.requestRandomWords(
+            keyHash,
+            s_subscriptionId,
+            requestConfirmations,
+            callbackGasLimit,
+            numWords
+        );
     }
 
     // Callback function when random number from Chainlink is generated
