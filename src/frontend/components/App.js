@@ -23,7 +23,7 @@ function App() {
   const [currentTimestamp, setCurrentTimestamp] = useState(0)
   const [account, setAccount] = useState(null)
 
-  let hideWebsiteWithPlaceholder = true
+  let hideWebsiteWithPlaceholder = false
 
   let provider;
   let interval;
