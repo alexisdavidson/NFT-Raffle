@@ -1,4 +1,5 @@
 const { expect } = require("chai")
+const helpers = require("@nomicfoundation/hardhat-network-helpers")
 
 const toWei = (num) => ethers.utils.parseEther(num.toString())
 const fromWei = (num) => ethers.utils.formatEther(num)
@@ -41,7 +42,7 @@ describe("Raffle", async function() {
 
             let entry1 = await raffle.entries(0);
             expect(entry1.id).to.equal(0)
-            expect(entry1.duration).to.equal(duration)
+            expect(entry1.duration).to.equal(duration * 3600)
             expect(entry1.dollarValue).to.equal(dollarValue)
             expect(entry1.ticketsTotalSupply).to.equal(ticketsTotalSupply)
             expect(entry1.price).to.equal(price)
@@ -107,6 +108,34 @@ describe("Raffle", async function() {
             entry2 = await raffle.entries(1);
             winner = entry2.winner
             console.log("winner: " + winner)
+        })
+
+        it("Should claim refund after raffle's timer ended", async function() {
+            await raffle.connect(deployer).createRaffle(duration, dollarValue, 3, price, name, 
+                image, projectName, nftAddress);
+
+            let balance1 = parseInt(await addr1.getBalance())
+            
+            await raffle.connect(addr1).buyTicket(0, { value: price})
+            expect(await raffle.getTicketsBoughtLength(0)).to.equal(1)
+            let balance2 = parseInt(await addr1.getBalance())
+            expect(balance2).to.lessThan(balance1)
+            
+            await raffle.connect(addr2).buyTicket(0, { value: price})
+            expect(await raffle.getTicketsBoughtLength(0)).to.equal(2)
+            
+            const halfDuration = duration * 3600 / 2;
+            await helpers.time.increase(halfDuration);
+
+            await expect(raffle.connect(addr2).claimRefund(0)).to.be.revertedWith('This raffle is still going');
+            
+            await helpers.time.increase(halfDuration + 100);
+
+            await expect(raffle.connect(addr3).claimRefund(0)).to.be.revertedWith('You did not participate to this raffle.');
+            await raffle.connect(addr1).claimRefund(0);
+            let balance3 = parseInt(await addr1.getBalance())
+            expect(balance3).to.greaterThan(balance2)
+            await expect(raffle.connect(addr1).claimRefund(0)).to.be.revertedWith('This raffle already got refunded for this address.');
         })
     })
 })

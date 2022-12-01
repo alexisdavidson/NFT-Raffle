@@ -20,6 +20,8 @@ contract Raffle is Ownable, ReentrancyGuard, VRFConsumerBaseV2 {
         address winner;
         address nftAddress;
         bool canceled;
+        uint256 timestampStart;
+        mapping(address => bool) refunds;
     }
 
     Entry[] public entries;
@@ -50,8 +52,19 @@ contract Raffle is Ownable, ReentrancyGuard, VRFConsumerBaseV2 {
     function createRaffle(uint256 _duration, uint256 _dollarValue, uint256 _ticketsTotalSupply, uint256 _price, string memory _name, 
                             string memory _image, string memory _projectName, address _nftAddress) public onlyOwner {
         uint256 _entryId = entries.length; 
-        entries.push(Entry(_entryId, _duration, _dollarValue, _ticketsTotalSupply, _price, _name, _image, _projectName,
-                            new address[](0), address(0), _nftAddress, false));
+        Entry storage _entry = entries.push();
+
+        _entry.id = _entryId;
+        _entry.duration = _duration * 3600;
+        _entry.dollarValue = _dollarValue;
+        _entry.ticketsTotalSupply = _ticketsTotalSupply;
+        _entry.price = _price;
+        _entry.name = _name;
+        _entry.image = _image;
+        _entry.projectName = _projectName;
+        _entry.nftAddress = _nftAddress;
+        _entry.timestampStart = block.timestamp;
+
         emit RaffleCreated(_entryId);
     }
 
@@ -106,6 +119,31 @@ contract Raffle is Ownable, ReentrancyGuard, VRFConsumerBaseV2 {
     function cancelRaffle(uint256 _entryId) public onlyOwner {
         Entry storage _entry = getEntryByIndex(_entryId);
         _entry.canceled = true;
+    }
+
+    function isRaffleTimerEnded(Entry storage _entry) private view returns (bool) {
+        return block.timestamp > _entry.timestampStart + _entry.duration;
+    }
+
+    function claimRefund(uint256 _entryId) public {
+        Entry storage _entry = getEntryByIndex(_entryId);
+
+        require(isRaffleTimerEnded(_entry), "This raffle is still going");
+        require(!_entry.refunds[msg.sender], "This raffle already got refunded for this address.");
+
+        uint256 _ticketsCountBoughtBySender;
+        uint256 _participantsLength = _entry.ticketsBought.length;
+        for (uint256 i = 0; i < _participantsLength;) {
+            if (_entry.ticketsBought[i] == msg.sender)
+                _ticketsCountBoughtBySender += 1;
+            unchecked { ++i; }
+        }
+
+        require (_ticketsCountBoughtBySender > 0, "You did not participate to this raffle.");
+
+        _entry.refunds[msg.sender] = true;
+        
+        payable(msg.sender).transfer(_ticketsCountBoughtBySender * _entry.price);
     }
     
     function withdraw() public onlyOwner {
