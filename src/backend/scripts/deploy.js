@@ -5,6 +5,10 @@ async function main() {
   console.log("Deploying contracts with the account:", deployer.address);
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
+
+  // vrfCoordinator Goerli: 0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D
+  // vrfCoordinator Mainnet: 0x271682DEB8C4E0901D1a1550aD2e64D568E69909
+
   const Token = await ethers.getContractFactory("Token");
   const token = await Token.deploy();
   console.log("Token contract address", token.address)
